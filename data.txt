@@ -1,0 +1,247 @@
+**************************************************************
+*                           DB_ENGINE                        *
+*                           ---------                        *
+*            DATA.TXT: SYNTAX INFORMATION AND EXAMPLES       *
+*            -----------------------------------------       *
+*                          Shivam Garg                       *
+*                           14074017                         *
+*	         (shivam.gargcd.cse14@itbhu.ac.in)           *
+**************************************************************
+
+                             SYNTAX
+                            ========
+
+EXITING THE PROGRAM:
+-------------------
+EXIT;
+
+SHOWING ALL THE TABLES PRESENT IN THE DATABASE:
+SHOW_TABLES;
+
+TABLE CREATION AND DATA INSERTION:
+---------------------------------
+CREATE table
+data_type attribute_name
+data_type attribute name
+...;
+
+data_type support: INT and CHAR
+
+INSERT table
+value11 value12 value13 ...
+value21 value22 value23 ...
+...;
+
+SYMBOLS FOR RELATIONAL ALGEBRA QUERIES:
+--------------------------------------
+`  : RENAME
+%  : CARTESIAN
+@  : SELECT
+#  : PROJECT
+:  : SET DIFFERENCE
+^  : UNION
+<  : AGGREGATE
+
+RELATIONAL ALGEBRA QUERIES:
+--------------------------
+SELECT: @[query](table)
+PROJECT: #[list_col](table)
+RENAME: `[new_table_name, list_col](table)
+UNION: table1 ^ table2
+SET-DIFFERENCE: table1 : table2
+CARTESIAN PRODUCT: table1 % table2
+
+QUERIES:
+-------
+query: cond1 op cond2 op cond2 ...
+cond: '2'>'4'; Name = 'May'; name = nickname; Age < '53'
+op:
+*: multiplication
++: addition
+-: subtraction
+~: not equal to
+=: is equal to?
+>: greater than
+<: less than
+!: logical not (unary)
+&: logical and (binary)
+|: logical or (binary)
+
+Note: column names are written as such, constants (integers and strings)
+----  are enclosed within single quotes '<literals>'
+
+AGGREGATE:
+---------
+{grouping_attributes}?{aggregate_fn}(table)
+
+AGGREGATE FUNCTION:
+MAX: max of the values (for integers)
+MIN: min of the values (for integers)
+AVG: average of the values (for integers)
+SUM: sum of the values (for integers)
+CNT: count of tuples in each group
+CND: count of distinct tuples in each group
+
+
+
+                         EXAMPLES
+                        ==========
+
+SAMPLE TABLES
+-------------
+CREATE Student
+INT roll
+CHAR name
+CHAR nick
+INT age
+INT dept_id;
+
+INSERT Student
+1 Ann A 24 1
+2 Tom T 23 3
+3 Bob B 25 2
+4 Liz Liz 6 1
+5 Tim T 5 3;
+
+CREATE Dept
+INT id
+CHAR name ;
+
+INSERT Dept
+1 CSE
+2 PHY
+3 MAT ;
+
+CREATE Student2
+INT roll
+CHAR name
+CHAR nick
+INT age
+INT dept_id;
+
+INSERT Student2
+6 Sia S 27 1
+7 Ram R 28 3
+3 Bob B 25 2
+4 Liz Liz 6 1;
+
+CREATE Student3
+INT roll
+CHAR name
+CHAR nick
+INT age
+INT dept_id;
+
+INSERT Student3
+8 Sam S 23 2
+9 Cal C 21 9;
+
+
+SAMPLE QUERIES
+--------------
+@[!(roll=age)&!(name=nick)|!('5'>'2.4')|name='Liz'](Student);                            
+@[name='Liz'](Student);
+@[name='Liz'](@[!(roll=age)&!(name=nick)|!('5'>'2.4')|name='Liz'](Student));
+@[name='Liz'](@[(roll=age)&(name>'a' & name<'=a')|('2.40'>'2.4')|name='Liz'](Student));
+@['1'~'0'](`[PEOPLE,ID,NAME_ID,ALIAS,AGE_ID,DEPT](Student));
+@[Student.dept_id=Dept.id](Student%Dept);
+@[name='Liz'](Student)%`[Stud1,ID,NAM,NICK,AGE,DEP](@[name='Liz'](Student));
+#[name,roll](@['1'='1'](Student));
+#[Student.name, Dept.name](@[Student.dept_id=Dept.id](Student%Dept));
+@[Student.dept_id=Dept.id&Student.age>'23'](Student % Dept);
+
+UNION QUERIES
+-------------
+@['4'~'3'](Student ^ Dept);
+@['4'~'3'](Student ^ Student2);
+@['4'~'3'](Student2 ^ Student);
+@['4'~'3'](Student : Dept);
+@['4'~'3'](Student : Student2);
+@['4'~'3'](Student2 : Student);
+@['4'~'3'](Student2 : Student3);
+@['4'~'3'](Student2 % Student3);
+
+AGGREGATE QUERIES
+-----------------
+CREATE Student
+INT roll
+CHAR name
+CHAR nick
+INT age
+INT dept_id;
+
+INSERT Student
+1 Ann A 24 2
+2 Tom T 23 1
+3 Bob B 25 2
+4 Liz Liz 6 1
+5 Tim T 5 3;
+
+#[dept, age, count](
+  `[Student, roll, name, nickname, age, dept, sum, oldest, youngest, count](
+     {dept_id, age}?{SUM(age), MAX(age), MIN(age), CNT(name)}(Student)
+   )
+);
+
+DIVISION OPERATOR EXAMPLE
+-------------------------
+
+Find those suppliers that supply every product with weight = 13.
+
+CREATE product
+INT pno
+CHAR pname
+INT weight;
+
+INSERT product
+1 Nut 13
+2 Bold 20
+3 Screw 13
+4 Cog 5
+5 Washer 13;
+
+CREATE supplier
+INT sno
+INT pno
+INT qty;
+
+INSERT supplier
+1 1 100
+2 4 231
+1 5 421
+3 4 131
+2 1 43
+2 3 532
+2 5 201;
+
+@['4'~'2'](product);
+@['4'~'2'](supplier);
+@[supplier.pno = product.pno](supplier % product);
+#[sno, pno](supplier);
+#[pno](@[weight = '13'](product));
+@['1'~'4']( (#[sno](supplier)) % (#[pno](@[weight = '13'](product))) );
+@['2'~'4'](
+  (`[all, sno, pno]( (#[sno](supplier)) % (#[pno](@[weight = '13'](product)))))
+  :
+  (#[sno, pno](supplier))
+);
+
+{sno}?{}(
+  @['1'~'4'](
+    (#[sno](supplier))
+    :
+    (
+      #[sno](
+        @['2'~'4'](
+          (`[all, sno, pno]( (#[sno](supplier)) % (#[pno](@[weight = '13'](product)))))
+          :
+          (#[sno, pno](supplier))
+        )
+      )
+    )
+  )
+);
+
+                             ~~ END ~~ 
+
+

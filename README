@@ -1,0 +1,102 @@
+**************************************************************
+*                           DB_ENGINE                        *
+*                           ---------                        *
+*                README: INSTALLATION INSTRUCTIONS           *
+*                ---------------------------------           *
+*                          Shivam Garg                       *
+*                           14074017                         *
+*	         (shivam.gargcd.cse14@itbhu.ac.in)           *
+**************************************************************
+
+NOTE: This program is not robust to incorrect syntax and will often
+crash due to incorrect syntax.
+
+Installation Instructions:
+
+1. Unzip the folder db_engine.tar to a folder of your choice.
+2. Go inside the extracted folder.
+3. Install by running "make" inside the folder.
+4. Now the program is installed and may be run by "./main.out".
+5. To uninstall, simply type "make clean".
+6. The archive can be recreated by "make tar".
+
+
+Running the queries:
+
+1. Check the data.txt for examples and syntax information.
+
+
+A note on working:
+      
+ 1.  The program is split into multiple files, each file containing
+     a group of related functions.
+ 2.  There is a main.cpp file, that begins the execution of the
+     program. 
+ 3.  It initially calls read_db_dat() function from db_rw.hh to 
+     read prior DB sessions.
+ 4.  It then runs loop, in each iteration it reads a query and
+     sends it to parser() function from support_fn.hh.
+ 5.  parser check if the query is of INSERT, CREATE, EXIT, 
+     SHOW_TABLES, or RA query.
+ 6.  For first type it calls appropriate functions from table_fn.hh.
+ 7.  For RA queries, it calls the ra() function.
+ 8.  ra() converts the infix query to reverse polish by calling
+     shunting_yard_nest() from expr_eval.hh.
+ 9.  It then evaluates this reverse polish query by calling 
+     eval_nest() from expr_eval.hh.
+10.  eval_nest(), calls the corresponding functions, such as
+     select(), project(), rename(), etc. from ra_op.hh and aggregate
+     function from aggregate.hh.
+11.  select() in particular can have a big infix query. This query
+     is evaluated by conversion into reverse polish and its evaluation
+     by calling shunting_yard_adv() and eval() function from 
+     expr_eval.hh respectively. 
+12.  eval_nest() after evaluating the reverse polish of the query
+     returns the final table containg results of the query to ra().
+13.  ra() then prints these queries on the screen by calling
+     print_table() function from table_fn.hh.
+14.  Finally the control passess back to main.cpp, which calls 
+     the write_db_dat() function from db_rw.hh which stores the query
+     if it was of INSERT or CREATE type, for future sessions.
+15.  The program ends its execution via the query "EXIT;".
+
+
+16.  All the data structures used are stored in data_str.hh and the
+     functions of expr_eval.hh, ra_op.hh, support_fn.hh, table_fn.hh
+     and aggregate.hh use it.
+17.  EXPLANATORY COMMENTS OF data_str.hh are given below for quick
+     reference:
+
+// PICTORIAL REPRESENTATION OF A TABLE
+// -----------------------------------
+//                   Columns
+//                      ^
+//           ___________|____________
+//          /                        \     // for multiline comment warning
+// Table -> Col1  Col2  Col3 ...  Coln  
+//           |     |     |         |    
+//           v     v     v         v    
+//          Val1  Val1  Val1 ...  Val1  \  // for multiline comment warning
+//          Val2  Val2  Val2 ...  Val2  |
+//          Val3  Val3  Val3 ...  Val3  |
+//           .     .     .         .    -->Attribute
+//           .     .     .         .    |
+//           .     .     .         .    |
+//          Valm  Valm  Valm ...  Valm  /
+//
+// NOTE: Indexing is from 1->n in diagram, and 0->(n-1) in the program.
+// ----
+// 
+// struct attribute {
+//   string name, type;
+//   vector < string > values;
+// };
+//
+// struct table {
+//   string name;
+//   vector < attribute > columns;
+// };
+
+
+
+                            ~~ END ~~
